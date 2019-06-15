@@ -21,10 +21,7 @@ class _ProfileBase(luigi.Task):
         super(_ProfileBase, self).__init__(*args, **kwargs)
         # Get a connection to the db
         self.db_connection = MongoClient().insta_bot
-        # Start a browser and login to instagram
-        self.driver = selenium.webdriver.Firefox()
-        self.profile_page = ProfilePage(driver=self.driver,
-                                        profile=self.profile)
+        
 
     def wait(self):
         wait_base = 0.5
@@ -40,22 +37,40 @@ class _ProfileBase(luigi.Task):
                        .find_one({'profile_name':self.profile}))
         return profile_doc
 
-    def log_in(self):
+    def get_new_driver(self):
+        options = Options()
+        options.headless = False
+        return selenium.webdriver.Firefox(options=options)
+
+    def set_profile_page(self, driver):
+        self.profile_page = ProfilePage(driver=driver,
+                                        profile=self.profile)
+
+    def log_in(self, driver):
         # Read credentials from file
         with open(self.credentials_file, 'r') as f:
             self.credentials = json.load(f)
         # Goto homepage
-        self.driver.get('https://www.instagram.com')
+        driver.get('https://www.instagram.com')
         self.wait()
         # Log in
-        page = LogInPage(self.driver)
+        page = LogInPage(driver)
         page.log_in(self.credentials)
 
     def log_in_and_goto_profile(self):
-        self.log_in()
+        driver = self.get_new_driver()
+        self.log_in(driver)
         self.wait()
+        self.set_profile_page(driver)
         self.profile_page.goto_url()
         self.wait()
+
+    def close(self):
+        if hasattr(self, 'profile_page'):
+            logger.debug('Closing driver')
+            self.profile_page.close()
+        else:
+            logger.debug("Task has no profile page, ignoring close command") 
 
 
 class GetFollowers(_ProfileBase):
@@ -74,6 +89,7 @@ class GetFollowers(_ProfileBase):
                                                 'time_inserted':
                                                 datetime.now()}}},
                                 upsert=True)
+        self.close()
 
     def complete(self):
         profile_doc = self.get_profile_doc()
@@ -109,6 +125,7 @@ class FollowProfile(_ProfileBase):
                                              'time_inserted':
                                              datetime.now()}}},
                                 upsert=True)
+        self.close()
 
     def complete(self):
         # Task is complete if we have requested to follow/follow this profile
@@ -138,6 +155,7 @@ class UnfollowProfile(_ProfileBase):
                                  {'status': {'value': new_status,
                                              'time_inserted': datetime.now()}}},
                                 upsert=True)
+        self.close()
 
     def complete(self):
         profile_doc = self.get_profile_doc()
@@ -165,6 +183,7 @@ class LikeLatest(_ProfileBase):
                                                   'time_liked': datetime.now()}}},
                                 upsert=True)
         self.wait()
+        self.close()
 
     def complete(self):
         profile_doc = self.get_profile_doc()

@@ -35,6 +35,10 @@ class _InstaPage(object):
         logger.debug(f'Waiting {1000*wait_base}ms')
         time.sleep(actual_wait)
 
+    def close(self):
+        """Closes the driver linked to this page."""
+        self.driver.close()
+
 
 class LogInPage(_InstaPage):
     """The first page reached when going to instagram."""
