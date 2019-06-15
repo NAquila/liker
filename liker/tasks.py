@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import os
 import logging
 import selenium
+from selenium.webdriver.firefox.options import Options
 from insta_pages import LogInPage, ProfilePage
 from pymongo import MongoClient
 import json
