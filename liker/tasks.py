@@ -101,7 +101,7 @@ class GetFollowers(_ProfileBase):
             return True
 
     def get_followers(self):
-        if not self.complete(self):
+        if not self.complete():
             raise TypeError('Only call get_followers-function when'
                             ' task is complete')
         profile_doc = self.get_profile_doc()
