@@ -3,7 +3,6 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 import time
-import pandas as pd
 import logging
 import re
 import random
@@ -261,7 +260,7 @@ class ProfilePage(_InstaPage):
                         return False
                 displayed_before = (WebDriverWait(self.driver, 60)
                                     .until(check_new_displayed))
-            except TimeoutException as e:
+            except TimeoutException:
                 logger.debug('Timed out waiting for new followers,'
                              ' exiting loop.')
                 break
