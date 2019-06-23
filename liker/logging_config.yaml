@@ -7,13 +7,18 @@ handlers:
   h_stderr: 
     class: "logging.StreamHandler"
     formatter: "f_standard"
-    level: "DEBUG"
+    level: "INFO"
     stream: "ext://sys.stderr"
+  h_file:
+    class: "logging.FileHandler"
+    formatter: "f_standard"
+    level: "DEBUG"
+    filename: "/home/aquila/liker.log"
 loggers:
   luigi-interface: 
     level: "DEBUG"
-    handlers: ["h_stderr"]
+    handlers: ["h_stderr", "h_file"]
   liker: 
     level: "DEBUG"
-    handlers: ["h_stderr"]
+    handlers: ["h_stderr", "h_file"]
 
