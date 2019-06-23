@@ -4,7 +4,7 @@ import random
 import logging
 from logging.config import dictConfig
 import yaml
-from tasks import LikeLatest, GetFollowers
+from liker.tasks import LikeLatest, GetFollowers
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class RandomBatchFromAuthorities(luigi.WrapperTask):
         # first gather followers
         all_followers = []
         for task in self.requires():
-            all_followers.append(task.get_followers())
+            all_followers.extend(task.get_followers())
         
         total_len = len(all_followers)
         if k > total_len:
@@ -38,53 +38,28 @@ class RandomBatchFromAuthorities(luigi.WrapperTask):
         return sample
 
 
-@inherits(RandomBatchFromAuthorities)
-class LikeMany(luigi.Task):
-
-    number_profiles = luigi.IntParameter()
-    is_complete = False
-
-    def requires(self):
-        # First make sure the all authorites have had there followers
-        # read
-        batch_task = self.clone(RandomBatchFromAuthorities)
-        return batch_task
-    def run(self):
-        # Next, get the profiles
-        batch_task = self.requires()
-        profile_batch = batch_task.get_batch(self.number_profiles)
-        like_tasks = [LikeLatest(credentials_file=self.credentials_file,
-                                 profile=acc)
-                      for acc in profile_batch]
-        for task in like_tasks:
-            yield task
-        self.is_complete = True
-        
-    def complete(self):
-        return self.is_complete
-        
-        
 if __name__ == '__main__':
-    # logging_config = 'logging_config.yaml'
-    # with open(logging_config, 'r') as f:
-    #     logging_dict = yaml.safe_load(f)
-    # dictConfig(logging_dict)
+    logging_config = './liker/logging_config.yaml'
+    with open(logging_config, 'r') as f:
+        logging_dict = yaml.safe_load(f)
+    dictConfig(logging_dict)
     authority_profiles = ['juliakbrou', 'datajackson_',
                           'sergilehkyi', 'likethereisnobox',
                           'robievilhelm', 'erikgeddaa',
                           'felipefenerich']
-    authority_profiles = ['erikgeddaa',
-                          'felipefenerich']
+    authority_profiles = ['felipefenerich']
 
-    number_profiles = 10
-    
+    number_profiles = 8
+    credentials_file = './liker/credentials.json'
 
-    credentials_file = './credentials.json'
+    batch_task = RandomBatchFromAuthorities(
+        authority_profiles=authority_profiles,
+        credentials_file=credentials_file)
 
-    like_many = LikeMany(authority_profiles=authority_profiles,
-                         credentials_file=credentials_file,
-                         number_profiles=number_profiles)
+    luigi.build([batch_task], local_scheduler=True, workers=1)
 
-    luigi.build([like_many], local_scheduler=True, workers=1)
-                           
-                           
+    profile_batch = batch_task.get_batch(number_profiles)
+    like_tasks = [LikeLatest(credentials_file=credentials_file,
+                             profile=acc)
+                  for acc in profile_batch]
+    luigi.build(like_tasks, local_scheduler=True, workers=1)
