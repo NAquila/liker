@@ -13,7 +13,7 @@ handlers:
     class: "logging.FileHandler"
     formatter: "f_standard"
     level: "DEBUG"
-    filename: "/home/aquila/liker.log"
+    filename: "/home/pi/liker.log"
 loggers:
   luigi-interface: 
     level: "DEBUG"
