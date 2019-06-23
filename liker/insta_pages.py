@@ -25,14 +25,14 @@ class _InstaPage(object):
         wait_base = 0.5
         noise = random.expovariate(1/wait_base)
         actual_wait = wait_base + noise
-        logger.debug(f'Waiting {1000*wait_base}ms')
+        logger.debug(f'Waiting {1000*actual_wait:.1f} ms')
         time.sleep(actual_wait)
 
     def short_wait(self):
         wait_base = 0.05
         noise = random.expovariate(1/wait_base)
         actual_wait = wait_base + noise
-        logger.debug(f'Waiting {1000*wait_base}ms')
+        logger.debug(f'Waiting {1000*actual_wait:.1f}ms')
         time.sleep(actual_wait)
 
     def close(self):
@@ -68,7 +68,6 @@ class LogInPage(_InstaPage):
             if button.text == 'Log In':
                 login = button
         login.click()
-        logger.debug('Sleeping...')
         for i in range(5):
             self.wait()
         # Get rid of annoying pop-up
@@ -145,6 +144,11 @@ class ProfilePage(_InstaPage):
                     break
         return follow_button
 
+    def is_private(self):
+        """Check if an account is private."""
+        # Currently just scans for an h2-heading with the word
+        # 'Private' in it. This could easily fail if Instagram changes
+        # their layout.
     def get_follow_status(self):
         follow_button = self._get_follow_button()
         return follow_button.text
@@ -185,13 +189,15 @@ class ProfilePage(_InstaPage):
         return followers_df
 
     def get_num_followers(self):
+        logger.debug('Locating follower anchor...')
         anchors = self.driver.find_elements_by_tag_name('a')
         for anchor in anchors:
             if anchor.is_displayed():
                 if 'followers' in anchor.text:
                     follower_anchor = anchor
+        logger.debug('Parsing information to find number of followers')
         # regexp find all numbers with suffixes, e.g. 21.3k
-        num_str = re.findall(r'\d+\.?\d+[km]', follower_anchor.text)[0]
+        num_str = re.findall(r'\d+\.?\d+[km]?', follower_anchor.text)[0]
         # Turn suffixes into a number
         if 'k' in num_str:
             num_str = num_str.replace('k', '')
@@ -271,32 +277,38 @@ class ProfilePage(_InstaPage):
         logger.debug(f'Found {len(followers)} followers')
         return followers
 
-    
     def get_latest_post(self):
         """Like the latest post if not already liked"""
         # First locate the post
+        logger.debug('Locating post')
         images  = self.driver.find_elements_by_tag_name('img')
         posts = []
         for img in images:
             if 'px' in img.get_property('sizes'):
                 posts.append(img)
-        first_post = posts[0]
-        parent_anchor = first_post.find_element_by_xpath('./../../..')
-        # Clicking doesn't seem to work. However we can access the href
-        href = parent_anchor.get_property('href')
-        # Open the image
-        self.driver.get(href)
-        self.short_wait()
-        # An object corresponding to the actions
-        # we can do with this post
-        post_page = PostPage(self.driver)
-        return post_page
+        if len(posts) == 0:
+            logger.debug('Could not locate any posts')
+            return None
+        else:
+            first_post = posts[0]
+            parent_anchor = first_post.find_element_by_xpath('./../../..')
+            # Clicking doesn't seem to work. However we can access the href
+            href = parent_anchor.get_property('href')
+            # Open the image
+            logger.debug(f'Found post with url {href}, going there')
+            self.driver.get(href)
+            self.short_wait()
+            # An object corresponding to the actions
+            # we can do with this post
+            post_page = PostPage(self.driver)
+            return post_page
 
 
 class PostPage(_InstaPage):
 
     def like_current(self):
         # Locate the like button, this is tricky...
+        logger.debug('Searching for like button...')
         spans = self.driver.find_elements_by_tag_name('span')
         like_spans = []
         for span in spans:
@@ -315,6 +327,7 @@ class PostPage(_InstaPage):
                 elif status == 'Like':
                     logger.info('Liking picture')
                     like_button = span.find_element_by_xpath('./..')
+                    logger.debug('Found like button, clicking...')
                     like_button.click()
                     self.short_wait()
 

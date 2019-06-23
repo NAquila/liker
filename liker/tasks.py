@@ -4,11 +4,13 @@ import os
 import logging
 import selenium
 from selenium.webdriver.firefox.options import Options
-from insta_pages import LogInPage, ProfilePage
+from liker.insta_pages import LogInPage, ProfilePage
 from pymongo import MongoClient
 import json
 import random
 import time
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +24,12 @@ class _ProfileBase(luigi.Task):
         super(_ProfileBase, self).__init__(*args, **kwargs)
         # Get a connection to the db
         self.db_connection = MongoClient().insta_bot
-        
 
     def wait(self):
         wait_base = 0.5
         noise = random.expovariate(1/wait_base)
         actual_wait = wait_base + noise
-        logger.debug(f'Waiting {1000*wait_base}ms')
+        logger.debug(f'Waiting {1000*actual_wait:.1f}ms')
         time.sleep(actual_wait)
 
     def get_profile_doc(self):
@@ -79,18 +80,23 @@ class GetFollowers(_ProfileBase):
     """
 
     def run(self):
-        self.log_in_and_goto_profile()
-        # Read followers
-        followers = self.profile_page.get_followers()
-        # Store in db
-        account_docs = self.db_connection.accounts
-        account_docs.update_one({'profile_name': self.profile},
-                                {'$set':
-                                 {'followers': {'value': followers,
-                                                'time_inserted':
-                                                datetime.now()}}},
-                                upsert=True)
-        self.close()
+        try:
+            self.log_in_and_goto_profile()
+            # Read followers
+            followers = self.profile_page.get_followers()
+            # Store in db
+            account_docs = self.db_connection.accounts
+            account_docs.update_one({'profile_name': self.profile},
+                                    {'$set':
+                                     {'followers': {'value': followers,
+                                                    'time_inserted':
+                                                    datetime.now()}}},
+                                    upsert=True)
+        except Exception as e:
+            logger.error(e)
+            raise e
+        finally:
+            self.close()
 
     def complete(self):
         profile_doc = self.get_profile_doc()
@@ -109,24 +115,28 @@ class GetFollowers(_ProfileBase):
         return profile_doc['followers']['value']
                 
 
-
 class FollowProfile(_ProfileBase):
     """Task that follows a profile"""
 
     def run(self):
-        self.log_in_and_goto_profile()
-        self.profile_page.follow()
-        # Insert new status in db
-        self.wait()
-        new_status = self.profile_page.get_follow_status()
-        account_docs = self.db_connection.accounts
-        account_docs.update_one({'profile_name': self.profile},
-                                {'$set':
-                                 {'status': {'value': new_status,
-                                             'time_inserted':
-                                             datetime.now()}}},
-                                upsert=True)
-        self.close()
+        try:
+            self.log_in_and_goto_profile()
+            self.profile_page.follow()
+            # Insert new status in db
+            self.wait()
+            new_status = self.profile_page.get_follow_status()
+            account_docs = self.db_connection.accounts
+            account_docs.update_one({'profile_name': self.profile},
+                                    {'$set':
+                                     {'status': {'value': new_status,
+                                                 'time_inserted':
+                                                 datetime.now()}}},
+                                    upsert=True)
+        except Exception as e:
+            logger.error(e)
+            raise e
+        finally:
+            self.close()
 
     def complete(self):
         # Task is complete if we have requested to follow/follow this profile
@@ -145,18 +155,23 @@ class UnfollowProfile(_ProfileBase):
     """Task that follows a profile"""
 
     def run(self):
-        self.log_in_and_goto_profile()
-        self.profile_page.unfollow()
-        # Insert new status in db
-        self.wait()
-        new_status = self.profile_page.get_follow_status()
-        account_docs = self.db_connection.accounts
-        account_docs.update_one({'profile_name': self.profile},
-                                {'$set':
-                                 {'status': {'value': new_status,
-                                             'time_inserted': datetime.now()}}},
-                                upsert=True)
-        self.close()
+        try:
+            self.log_in_and_goto_profile()
+            self.profile_page.unfollow()
+            # Insert new status in db
+            self.wait()
+            new_status = self.profile_page.get_follow_status()
+            account_docs = self.db_connection.accounts
+            account_docs.update_one({'profile_name': self.profile},
+                                    {'$set':
+                                     {'status': {'value': new_status,
+                                                 'time_inserted': datetime.now()}}},
+                                    upsert=True)
+        except Exception as e:
+            logger.error(e)
+            raise e
+        finally:
+            self.close()
 
     def complete(self):
         profile_doc = self.get_profile_doc()
@@ -173,24 +188,40 @@ class UnfollowProfile(_ProfileBase):
 class LikeLatest(_ProfileBase):
 
     def run(self):
-        self.log_in_and_goto_profile()
-        latest_post_page = self.profile_page.get_latest_post()
-        latest_post_page.like_current()
-        post_tag = latest_post_page.get_tag()
-        account_docs = self.db_connection.accounts
-        account_docs.update_one({'profile_name': self.profile},
-                                {'$set':
-                                 {'latest_post': {'tag': post_tag,
-                                                  'time_liked': datetime.now()}}},
-                                upsert=True)
-        self.wait()
-        self.close()
+        try:
+            self.log_in_and_goto_profile()
+            latest_post_page = self.profile_page.get_latest_post()
+            if latest_post_page is None:
+                account_docs = self.db_connection.accounts
+                account_docs.update_one({'profile_name': self.profile},
+                                        {'$set':
+                                         {'has_posts': False,
+                                          'latest_post': {'time_liked':
+                                                          datetime.now()}}},
+                                        upsert=True)
+            else:
+                latest_post_page.like_current()
+                post_tag = latest_post_page.get_tag()
+                account_docs = self.db_connection.accounts
+                account_docs.update_one({'profile_name': self.profile},
+                                        {'$set':
+                                         {'has_posts': True,
+                                          'latest_post': {'tag': post_tag,
+                                                          'time_liked':
+                                                          datetime.now()}}},
+                                        upsert=True)
+            self.wait()
+        except Exception as e:
+            logger.error(e)
+            raise e
+        finally:
+            self.close()
 
     def complete(self):
         profile_doc = self.get_profile_doc()
         if profile_doc is None:
             return False
-        elif 'latest_post' not in profile_doc.keys():
+        elif 'has_posts' not in profile_doc.keys():
             return False
         else:
             timeout = timedelta(days=7)
