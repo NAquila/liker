@@ -45,9 +45,7 @@ if __name__ == '__main__':
     dictConfig(logging_dict)
     authority_profiles = ['juliakbrou', 'datajackson_',
                           'sergilehkyi', 'likethereisnobox',
-                          'robievilhelm', 'erikgeddaa',
-                          'felipefenerich']
-    authority_profiles = ['felipefenerich']
+                          'robievilhelm', 'felipefenerich']
 
     number_profiles = 8
     credentials_file = './liker/credentials.json'
