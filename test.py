@@ -12,4 +12,3 @@ def test_tasks():
 
 if __name__ == '__main__':
     luigi.build(test_tasks(), local_scheduler=True)
-
