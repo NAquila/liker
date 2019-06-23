@@ -31,7 +31,7 @@ class _InstaPage(object):
         wait_base = 0.05
         noise = random.expovariate(1/wait_base)
         actual_wait = wait_base + noise
-        logger.debug('Waiting {1000*actual_wait:.1f}ms'
+        logger.debug('Waiting {:.1f}ms'
                      .format(1000*actual_wait))
         time.sleep(actual_wait)
 
