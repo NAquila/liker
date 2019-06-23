@@ -25,14 +25,15 @@ class _InstaPage(object):
         wait_base = 0.5
         noise = random.expovariate(1/wait_base)
         actual_wait = wait_base + noise
-        logger.debug(f'Waiting {1000*actual_wait:.1f} ms')
+        logger.debug('Waiting {:.1f} ms'.format(1000*actual_wait))
         time.sleep(actual_wait)
 
     def short_wait(self):
         wait_base = 0.05
         noise = random.expovariate(1/wait_base)
         actual_wait = wait_base + noise
-        logger.debug(f'Waiting {1000*actual_wait:.1f}ms')
+        logger.debug('Waiting {1000*actual_wait:.1f}ms'
+                     .format(1000*actual_wait))
         time.sleep(actual_wait)
 
     def close(self):
@@ -46,7 +47,7 @@ class LogInPage(_InstaPage):
         """Verifies that the current url is 'https://www.instagram.com'."""
         curr_url = self.driver.current_url
         if curr_url != 'https://www.instagram.com/':
-            msg = f'{curr_url} is not the login url for instagram'
+            msg = '{} is not the login url for instagram'.format(curr_url)
             raise WrongPageError(msg)
 
     def log_in(self, cred):
@@ -86,7 +87,7 @@ class MainPage(_InstaPage):
         """Verifies that the current url is 'https://www.instagram.com'."""
         curr_url = self.driver.current_url
         if curr_url != 'https://www.instagram.com/':
-            msg = f'{curr_url} is not the login url for instagram'
+            msg = '{} is not the login url for instagram'.format(curr_url)
             raise WrongPageError(msg)
 
     def _find_search_form(self):
@@ -119,20 +120,21 @@ class ProfilePage(_InstaPage):
 
     def goto_url(self):
         """Moves to this profile page"""
-        self.driver.get(f'https://www.instagram.com/{self.profile}/')
+        self.driver.get('https://www.instagram.com/{}/'.format(self.profile))
 
     def verify_url(self):
         """Verifies that the current url is
         'https://www.instagram.com/name_of_profile'."""
         if not self.correct_url():
-            msg = f'{self.driver.curr_url} is not the login url for instagram'
+            msg = ('{} is not the login url for instagram'
+                   .format(self.driver.curr_url))
             raise WrongPageError(msg)
 
     def on_url(self):
         """Returns if we are on the correct url or not."""
         curr_url = self.driver.current_url
         on_url = (curr_url ==
-                   f'https://www.instagram.com/{self.profile}/')
+                  'https://www.instagram.com/{}/'.format(self.profile))
         return on_url
 
     def _get_follow_button(self):
@@ -156,14 +158,14 @@ class ProfilePage(_InstaPage):
     def follow(self):
         """Follow a user if not already following"""
         follow_button = self._get_follow_button()
-        logger.info(f'Attempting to follow user {self.profile}')
+        logger.info('Attempting to follow user {}'.format(self.profile))
         follow_button.click()
         self.short_wait()
 
     def unfollow(self):
         """Unfollow a user if user is being followed"""
         follow_button = self._get_follow_button()
-        logger.info(f'Attempting to unfollow user {self.profile}')
+        logger.info('Attempting to unfollow user {}'.format(self.profile))
         follow_button.click()
         self.short_wait()
         # After clicking the follow button a popup is presented to verify
@@ -274,14 +276,14 @@ class ProfilePage(_InstaPage):
                 list_item = b.find_element_by_xpath('./../../..')
                 account_name = list_item.text.split('\n')[0]
                 followers.append(account_name)
-        logger.debug(f'Found {len(followers)} followers')
+        logger.debug('Found {} followers'.format(len(followers)))
         return followers
 
     def get_latest_post(self):
         """Like the latest post if not already liked"""
         # First locate the post
         logger.debug('Locating post')
-        images  = self.driver.find_elements_by_tag_name('img')
+        images = self.driver.find_elements_by_tag_name('img')
         posts = []
         for img in images:
             if 'px' in img.get_property('sizes'):
@@ -295,7 +297,7 @@ class ProfilePage(_InstaPage):
             # Clicking doesn't seem to work. However we can access the href
             href = parent_anchor.get_property('href')
             # Open the image
-            logger.debug(f'Found post with url {href}, going there')
+            logger.debug('Found post with url {}, going there'.format(href))
             self.driver.get(href)
             self.short_wait()
             # An object corresponding to the actions
@@ -335,4 +337,3 @@ class PostPage(_InstaPage):
         url = self.driver.current_url
         tag = url.split('/')[-2]
         return tag
-

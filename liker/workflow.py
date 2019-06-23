@@ -31,8 +31,9 @@ class RandomBatchFromAuthorities(luigi.WrapperTask):
         
         total_len = len(all_followers)
         if k > total_len:
-            logger.warning(f'Trying to get {k} followers from a list'
-                           ' of length {total_len}, reducing number')
+            logger.warning('Trying to get {} followers from a list'
+                           ' of length {}, reducing number'
+                           .format(k, total_len))
             k = total_len
         sample = random.sample(all_followers, k)
         return sample

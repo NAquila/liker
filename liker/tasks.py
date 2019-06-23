@@ -28,7 +28,7 @@ class _ProfileBase(luigi.Task):
         wait_base = 0.5
         noise = random.expovariate(1/wait_base)
         actual_wait = wait_base + noise
-        logger.debug(f'Waiting {1000*actual_wait:.1f}ms')
+        logger.debug('Waiting {:.1f}ms'.format(1000*actual_wait))
         time.sleep(actual_wait)
 
     def get_profile_doc(self):
@@ -146,7 +146,7 @@ class FollowProfile(_ProfileBase):
             return False
         else:
             status = profile_doc['status']['value']
-            print(f'follow_task sees {status}')
+            print('follow_task sees {}'.format(status))
             return status in ('Following', 'Requested')
 
 
@@ -182,7 +182,7 @@ class UnfollowProfile(_ProfileBase):
         else:
             status = profile_doc['status']['value']
             # Task is complete if we have the ability to follow this profile
-            print(f'unfollow_task sees {status}')
+            print('unfollow_task sees {}'.format(status))
             return status == 'Follow'
 
 
