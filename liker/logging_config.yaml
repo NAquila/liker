@@ -1,0 +1,19 @@
+version: 1
+disable_existing_loggers: false
+formatters:
+  f_standard:
+    format: "%(levelname)s|%(name)s|%(asctime)s: %(message)s"
+handlers:
+  h_stderr: 
+    class: "logging.StreamHandler"
+    formatter: "f_standard"
+    level: "DEBUG"
+    stream: "ext://sys.stderr"
+loggers:
+  luigi-interface: 
+    level: "DEBUG"
+    handlers: ["h_stderr"]
+  liker: 
+    level: "DEBUG"
+    handlers: ["h_stderr"]
+

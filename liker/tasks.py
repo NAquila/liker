@@ -6,10 +6,9 @@ import selenium
 from selenium.webdriver.firefox.options import Options
 from liker.insta_pages import LogInPage, ProfilePage
 from pymongo import MongoClient
-import json
+import yaml
 import random
 import time
-
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +35,7 @@ class _ProfileBase(luigi.Task):
         """Return the document that has information about this profile.
         If no such document exists, returns None"""
         profile_doc = (self.db_connection.accounts
-                       .find_one({'profile_name':self.profile}))
+                       .find_one({'profile_name': self.profile}))
         return profile_doc
 
     def get_new_driver(self):
@@ -51,7 +50,7 @@ class _ProfileBase(luigi.Task):
     def log_in(self, driver):
         # Read credentials from file
         with open(self.credentials_file, 'r') as f:
-            self.credentials = json.load(f)
+            self.credentials = yaml.load(f)
         # Goto homepage
         driver.get('https://www.instagram.com')
         self.wait()
@@ -72,7 +71,7 @@ class _ProfileBase(luigi.Task):
             logger.debug('Closing driver')
             self.profile_page.close()
         else:
-            logger.debug("Task has no profile page, ignoring close command") 
+            logger.debug("Task has no profile page, ignoring close command")
 
 
 class GetFollowers(_ProfileBase):
@@ -113,7 +112,7 @@ class GetFollowers(_ProfileBase):
                             ' task is complete')
         profile_doc = self.get_profile_doc()
         return profile_doc['followers']['value']
-                
+
 
 class FollowProfile(_ProfileBase):
     """Task that follows a profile"""
@@ -165,7 +164,8 @@ class UnfollowProfile(_ProfileBase):
             account_docs.update_one({'profile_name': self.profile},
                                     {'$set':
                                      {'status': {'value': new_status,
-                                                 'time_inserted': datetime.now()}}},
+                                                 'time_inserted':
+                                                 datetime.now()}}},
                                     upsert=True)
         except Exception as e:
             logger.error(e)
@@ -184,6 +184,7 @@ class UnfollowProfile(_ProfileBase):
             # Task is complete if we have the ability to follow this profile
             print(f'unfollow_task sees {status}')
             return status == 'Follow'
+
 
 class LikeLatest(_ProfileBase):
 

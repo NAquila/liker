@@ -1,11 +1,15 @@
 import luigi
-from tasks import LikeLatest
-# First follow, then unfollow
-profile = 'pauuii'
-credentials_file = 'credentials.json'
+from liker import credentials_file
+from liker.tasks import LikeLatest
 
-like_task = LikeLatest(credentials_file=credentials_file,
-                       profile=profile)
 
-luigi.build([like_task], local_scheduler=True)
+def test_tasks():
+    profile = 'donnid28'
+    like_task = LikeLatest(credentials_file=credentials_file,
+                           profile=profile)
+    return [like_task]
+
+
+if __name__ == '__main__':
+    luigi.build(test_tasks(), local_scheduler=True)
 
