@@ -198,7 +198,9 @@ class ProfilePage(_InstaPage):
                     follower_anchor = anchor
         logger.debug('Parsing information to find number of followers')
         # regexp find all numbers with suffixes, e.g. 21.3k
-        num_str = re.findall(r'\d+\.?\d+[km]?', follower_anchor.text)[0]
+        num_str = re.findall(r'\d+\,?\.?\d+[km]?', follower_anchor.text)[0]
+        # remove commas
+        num_str = num_str.replace(',', '')
         # Turn suffixes into a number
         if 'k' in num_str:
             num_str = num_str.replace('k', '')
@@ -209,6 +211,8 @@ class ProfilePage(_InstaPage):
         else:
             factor = 1
         num_followers = float(num_str) * factor
+        logger.debug('Profile {} has {} followers'
+                     .format(self.profile, num_followers))
         return num_followers
 
     def _open_followers_window(self):
