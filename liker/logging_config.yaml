@@ -7,13 +7,12 @@ handlers:
   h_stderr: 
     class: "logging.StreamHandler"
     formatter: "f_standard"
-    level: "INFO"
+    level: "DEBUG"
     stream: "ext://sys.stderr"
   h_file:
     class: "logging.FileHandler"
     formatter: "f_standard"
     level: "DEBUG"
-    filename: "/home/pi/liker.log"
 loggers:
   luigi-interface: 
     level: "DEBUG"
