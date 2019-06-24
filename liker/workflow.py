@@ -1,10 +1,10 @@
 import luigi
-from luigi.util import inherits
 import random
 import logging
 from logging.config import dictConfig
 import yaml
 from liker.tasks import LikeLatest, GetFollowers
+from liker import credentials_file
 
 
 logger = logging.getLogger(__name__)
@@ -40,16 +40,11 @@ class RandomBatchFromAuthorities(luigi.WrapperTask):
 
 
 if __name__ == '__main__':
-    logging_config = './liker/logging_config.yaml'
-    with open(logging_config, 'r') as f:
-        logging_dict = yaml.safe_load(f)
-    dictConfig(logging_dict)
     authority_profiles = ['juliakbrou', 'datajackson_',
                           'sergilehkyi', 'likethereisnobox',
                           'robievilhelm', 'felipefenerich']
 
     number_profiles = 8
-    credentials_file = './liker/credentials.json'
 
     batch_task = RandomBatchFromAuthorities(
         authority_profiles=authority_profiles,
