@@ -43,6 +43,7 @@ if __name__ == '__main__':
     authority_profiles = ['juliakbrou', 'datajackson_',
                           'sergilehkyi', 'likethereisnobox',
                           'robievilhelm', 'felipefenerich']
+    authority_profiles = ['robievilhelm', 'felipefenerich']
 
     number_profiles = 8
 
