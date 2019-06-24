@@ -40,7 +40,7 @@ class _ProfileBase(luigi.Task):
 
     def get_new_driver(self):
         options = Options()
-        options.headless = False
+        options.headless = True
         return selenium.webdriver.Firefox(options=options)
 
     def set_profile_page(self, driver):
