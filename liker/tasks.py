@@ -50,7 +50,7 @@ class _ProfileBase(luigi.Task):
     def log_in(self, driver):
         # Read credentials from file
         with open(self.credentials_file, 'r') as f:
-            self.credentials = yaml.load(f)
+            self.credentials = yaml.safe_load(f)
         # Goto homepage
         driver.get('https://www.instagram.com')
         self.wait()
