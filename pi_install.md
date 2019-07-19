@@ -15,14 +15,15 @@ sudo mount /dev/sda /media/usb_seagate/
 # Install python3 and packages
 ```
 sudo apt-get install python3-pip
-pip3 install yaml
+pip3 install pyyaml
+pip3 install luigi
 ```
 
 # Install pymongo
 Install through the rasbian repo
 ```
 sudo apt-get install mongodb
-pip3 install pymongo=2.9.5
+pip3 install pymongo==2.9.5
 ```
 
 # Set-up selenium and webdrivers
@@ -35,7 +36,7 @@ pip3 install selenium
 wget https://github.com/mozilla/geckodriver/releases/download/v0.17.0/geckodriver-v0.17.0-arm7hf.tar.gz
 tar -xf geckodriver-v0.17.0-arm7hf.tar.gz
 rm geckodriver-v0.17.0-arm7hf.tar.gz
-mv geckodriver /usr/local/bin/geckodriver
+sudo mv geckodriver /usr/local/bin/geckodriver
 ```
 ## Firefox and virtual x-buffer
 ```
@@ -43,3 +44,17 @@ sudo apt-get install firefox-esr
 sudo apt-get install xvfb
 ```
 Run commands with xvfb-run
+
+# Download git repo
+```
+sudo apt-get install git
+ssh-keygen
+cat ~/.ssh/id.pub # Copy to github
+git clone git@github.com:NAquila/liker.git
+```
+
+# Copy credentials
+
+# Remove luigi prints
+```
+cat >> /etc/luigi/luigi.cfg
