@@ -110,7 +110,7 @@ class GetFollowers(_ProfileBase):
             # consider this task old
             task_is_old = (curr_time - time_inserted
                            > timedelta(days=15))
-            return task_is_old
+            return not task_is_old
 
     def get_followers(self):
         if not self.complete():
