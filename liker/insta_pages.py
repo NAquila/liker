@@ -245,10 +245,10 @@ class ProfilePage(_InstaPage):
         # down the list of followers, loading more
         displayed_before = 0
 
-        def get_num_list_items():
-                logger.debug('Reading list_items')
-                list_items = self.driver.find_elements_by_tag_name('li')
-                return len(list_items)
+        def get_num_anchors():
+                logger.debug('Reading anchors')
+                anchors = self.driver.find_elements_by_tag_name('a')
+                return len(anchors)
 
         while True:
             logger.debug('Pressing page down and'
@@ -256,7 +256,7 @@ class ProfilePage(_InstaPage):
             page_down()
             try:
                 def check_new_displayed(driver):
-                    num_new = get_num_list_items()
+                    num_new = get_num_anchors()
                     if num_new > displayed_before:
                         return num_new
                     else:
@@ -269,7 +269,7 @@ class ProfilePage(_InstaPage):
                              ' exiting loop.')
                 break
 
-    def _read_displayed_followers(self):
+    def _read_displayed_followers_button(self):
         account_texts = ('Follow', 'Following', 'Requested')
         followers = []
         logger.debug('Reading followers')
@@ -279,6 +279,19 @@ class ProfilePage(_InstaPage):
                 list_item = b.find_element_by_xpath('./../../..')
                 account_name = list_item.text.split('\n')[0]
                 followers.append(account_name)
+        logger.debug('Found {} followers'.format(len(followers)))
+        return followers
+
+    def _read_displayed_followers(self):
+        followers = []
+        logger.debug('Reading followers')
+        anchors = self.driver.find_elements_by_tag_name('a')
+        for a in anchors:
+            title = a.get_property('title')
+            # Anchors corresponding to a follower have a title with
+            # the followers name
+            if len(title) > 0:
+                followers.append(title)
         logger.debug('Found {} followers'.format(len(followers)))
         return followers
 
