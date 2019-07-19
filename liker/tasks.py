@@ -103,8 +103,14 @@ class GetFollowers(_ProfileBase):
             return False
         elif 'followers' not in profile_doc.keys():
             return False
-        else:  # Document and entry in document exists, good enough for now
-            return True
+        else:  # Document and entry in document exists, check how old
+            time_inserted = profile_doc['followers']['time_inserted']
+            curr_time = datetime.now()
+            # If the followers were read more than 15 days ago
+            # consider this task old
+            task_is_old = (curr_time - time_inserted
+                           > timedelta(days=15))
+            return task_is_old
 
     def get_followers(self):
         if not self.complete():
